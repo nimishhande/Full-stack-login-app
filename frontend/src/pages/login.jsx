@@ -1,83 +1,98 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-export default function Login() {
+function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Manual login (email + password)
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    const formData = new URLSearchParams();
+    formData.append("username", email);
+    formData.append("password", password);
 
     try {
       const response = await fetch("http://127.0.0.1:8000/login", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          username: email,
-          password: password,
-        }),
+        body: formData,
       });
 
       if (!response.ok) {
-        alert("Login failed");
+        alert("Invalid email or password");
         return;
       }
 
       const data = await response.json();
-      localStorage.setItem("token", data.access_token); // save JWT
-      window.location.href = "/dashboard"; // redirect
+      console.log("Login successful:", data);
+      localStorage.setItem("token", data.access_token);
+
+      navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
-      alert("Something went wrong!");
+      alert("Something went wrong during login.");
     }
   };
 
-  // Google login
+  // ✅ FIXED Google login path
   const handleGoogleLogin = () => {
-    window.location.href = "http://127.0.0.1:8000/auth/google";
+    window.location.href = "http://127.0.0.1:8000/login/google";
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <div className="w-96 p-6 shadow-lg rounded-lg bg-white">
-        <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
+    <div className="flex justify-center items-center h-screen bg-gray-100">
+      <form
+        onSubmit={handleLogin}
+        className="bg-white p-8 rounded-lg shadow-md w-96"
+      >
+        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg"
-            required
-          />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full p-2 mb-4 border rounded"
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full p-2 mb-6 border rounded"
+          required
+        />
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg"
-            required
-          />
+        <button
+          type="submit"
+          className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+        >
+          Login
+        </button>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full bg-red-500 text-white p-2 rounded mt-4 hover:bg-red-600"
+        >
+          Login with Google
+        </button>
+
+        <p className="text-sm mt-4 text-center">
+          Don’t have an account?{" "}
+          <span
+            onClick={() => navigate("/signup")}
+            className="text-blue-500 cursor-pointer"
           >
-            Login
-          </button>
-        </form>
-
-        <div className="mt-4">
-          <button
-            onClick={handleGoogleLogin}
-            className="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600"
-          >
-            Continue with Google
-          </button>
-        </div>
-      </div>
+            Sign Up
+          </span>
+        </p>
+      </form>
     </div>
   );
 }
+
+export default Login;
